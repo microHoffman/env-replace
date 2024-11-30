@@ -39,6 +39,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.runReplaceAll = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const fs = __importStar(__nccwpck_require__(292));
 function getEnvFile(lines) {
@@ -57,23 +58,28 @@ function getEnvFile(lines) {
     }
     return env;
 }
-function runReplaceAll(file, replaceAll) {
+function runReplaceAll(file, replaceAll, upsert, keepOnlyReplaced) {
     return __awaiter(this, void 0, void 0, function* () {
         const envContent = yield fs.readFile(file, "utf8");
         const env = getEnvFile(envContent.split("\n"));
         const replaceMap = getEnvFile(replaceAll.split("\n"));
-        const upsert = core.getBooleanInput("upsert", { required: false });
-        core.info(`Replace list: ${Array.from(replaceMap.keys()).join(", ")}`);
-        core.info(`Env: ${Array.from(env.keys()).join(", ")}`);
+        core.info(`Replace list keys: ${Array.from(replaceMap.keys()).join(", ")}`);
+        core.info(`Current env keys: ${Array.from(env.keys()).join(", ")}`);
         const matches = new Map();
         for (const key of replaceMap.keys()) {
-            if (replaceMap.get(key) === env.get(key))
-                continue;
-            if (!upsert && !env.has(key))
-                continue;
-            matches.set(key, replaceMap.get(key));
+            if (env.has(key) || upsert) {
+                matches.set(key, replaceMap.get(key));
+            }
         }
         core.info(`Found ${matches.size} matches`);
+        if (!keepOnlyReplaced) {
+            for (const key of env.keys()) {
+                if (!matches.has(key)) {
+                    matches.set(key, env.get(key));
+                }
+            }
+        }
+        core.info(`Returning env file with ${matches.size} variables.`);
         const result = Array.from(matches.keys())
             .map((key) => `${key}=${matches.get(key)}`)
             .join("\n");
@@ -82,6 +88,7 @@ function runReplaceAll(file, replaceAll) {
         return result;
     });
 }
+exports.runReplaceAll = runReplaceAll;
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -90,7 +97,11 @@ function run() {
             const file = core.getInput("file");
             const replaceAll = core.getInput("replace-all");
             if (replaceAll) {
-                return yield runReplaceAll(file, replaceAll);
+                const upsert = core.getBooleanInput("upsert", { required: false });
+                const keepOnlyReplaced = core.getBooleanInput("keep-only-replaced", {
+                    required: false,
+                });
+                return yield runReplaceAll(file, replaceAll, upsert, keepOnlyReplaced);
             }
             if (!key || !value || !file) {
                 throw new Error("Missing required input");

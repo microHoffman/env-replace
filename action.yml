@@ -21,6 +21,10 @@ inputs:
     description: "upsert key value pair"
     required: false
     default: "false"
+  keep-only-replaced:
+    description: "use together with replace-all: flag that determines if the result env file will contain only the replaced values"
+    required: false
+    default: false
 runs:
   using: "node16"
   main: "dist/index.js"

@@ -24,26 +24,39 @@ function getEnvFile(lines: string[]) {
 	return env;
 }
 
-async function runReplaceAll(file: string, replaceAll: string) {
+export async function runReplaceAll(
+	file: string,
+	replaceAll: string,
+	upsert: boolean | number,
+	keepOnlyReplaced: boolean | number
+) {
 	const envContent = await fs.readFile(file, "utf8");
 
 	const env = getEnvFile(envContent.split("\n"));
 	const replaceMap = getEnvFile(replaceAll.split("\n"));
-	const upsert = core.getBooleanInput("upsert", { required: false });
 
-	core.info(`Replace list: ${Array.from(replaceMap.keys()).join(", ")}`);
-	core.info(`Env: ${Array.from(env.keys()).join(", ")}`);
+	core.info(`Replace list keys: ${Array.from(replaceMap.keys()).join(", ")}`);
+	core.info(`Current env keys: ${Array.from(env.keys()).join(", ")}`);
 
 	const matches = new Map();
 
 	for (const key of replaceMap.keys()) {
-		if (replaceMap.get(key) === env.get(key)) continue;
-		if (!upsert && !env.has(key)) continue;
-
-		matches.set(key, replaceMap.get(key));
+		if (env.has(key) || upsert) {
+			matches.set(key, replaceMap.get(key));
+		}
 	}
 
 	core.info(`Found ${matches.size} matches`);
+
+	if (!keepOnlyReplaced) {
+		for (const key of env.keys()) {
+			if (!matches.has(key)) {
+				matches.set(key, env.get(key));
+			}
+		}
+	}
+
+	core.info(`Returning env file with ${matches.size} variables.`);
 
 	const result = Array.from(matches.keys())
 		.map((key) => `${key}=${matches.get(key)}`)
@@ -64,7 +77,11 @@ async function run() {
 		const replaceAll = core.getInput("replace-all");
 
 		if (replaceAll) {
-			return await runReplaceAll(file, replaceAll);
+			const upsert = core.getBooleanInput("upsert", { required: false });
+			const keepOnlyReplaced = core.getBooleanInput("keep-only-replaced", {
+				required: false,
+			});
+			return await runReplaceAll(file, replaceAll, upsert, keepOnlyReplaced);
 		}
 
 		if (!key || !value || !file) {

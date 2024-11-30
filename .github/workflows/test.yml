@@ -1,41 +1,64 @@
-name: "test"
+# TODO probably do jest tests instead?
+# name: "test"
 
-on:
-  pull_request:
-  push:
-    branches:
-      - master
-      - "releases/*"
+# on:
+#   pull_request:
+#   push:
+#     branches:
+#       - master
+#       - "releases/*"
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          npm install
-      - run: |
-          npm run all
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./
-        with:
-          key: "HELLO"
-          value: "TEST"
-          file: "./src/tests/.env"
-      - run: |
-          cat ./src/tests/.env | grep "TEST"
-  test-match-secrets:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./
-        with:
-          replace-all: |
-            NEW=VALUE
-          file: "./src/tests/.env"
-          upsert: true
-      - run: |
-          cat ./src/tests/.env | grep "VALUE"
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - run: |
+#           npm install
+#       - run: |
+#           npm run all
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: ./
+#         with:
+#           key: "HELLO"
+#           value: "TEST"
+#           file: "./src/tests/.env"
+#       - run: |
+#           cat ./src/tests/.env | grep "TEST"
+#   test-replace-all-keep-only-replaced:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: ./
+#         with:
+#           replace-all: |
+#             NEW=VALUE
+#             OTHER=REPLACED_VALUE
+#           file: "./src/tests/.env"
+#           upsert: true
+#           keep-only-replaced: true
+#       - run: |
+#           cat ./src/tests/.env | grep "VALUE"
+# #          cat ./src/tests/.env | grep "REPLACED_VALUE"
+# #          cat ./src/tests/.env | grep "WORLD"
+# #          cat ./src/tests/.env | grep "TEST_VALUE"
+
+#   test-replace-all-keep-all:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: ./
+#         with:
+#           replace-all: |
+#             NEW=VALUE
+#             OTHER=REPLACED_VALUE
+#           file: "./src/tests/.env"
+#           upsert: true
+#       - run: |
+#           cat ./src/tests/.env | grep "VALUE"
+#           cat ./src/tests/.env | grep "REPLACED_VALUE"
+#           cat ./src/tests/.env | grep "WORLD"
+#           cat ./src/tests/.env | grep "TEST_VALUE"

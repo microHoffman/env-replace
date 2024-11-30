@@ -26,6 +26,10 @@ Warning: This is useful for replacing multiple keys at once, but be careful not 
 
 If true, will add the key/value if it does not exist. Default `false`
 
+### `keep-only-replaced`
+
+Use together with replace-all: flag that determines if the result env file will contain only the replaced values. Default `false`
+
 ## Example usage
 
 ### With key and value
